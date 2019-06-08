@@ -3,8 +3,8 @@
 # Summary
 - [Abstract](#abstract)
 - [Warning](#warning)
+- [Overview](#overview)
 - [Boot process](#boot)
-- [Planning des semaines](#agenda)
 - [Membre du groupe de recherche](#membres)  
 - [Attribution des taches](#taches)
 - [Modélisation d'un réseau biologique](#Modélisations)
@@ -27,5 +27,10 @@ In addition to a layer architechtures, some changes are made into the userspace 
 
 # Warning <a name="warning"/>
 
-The system has been testing for a debian distribution (above 2.6). It contains graphical compennetn that light not work for other linux architecture.
-It's recommended to use the system in a suddoers session and to create a fully root user in case of emergency (to edit files that might be a problem). After starting the system at boot time, a suddoers users will ne be able to use any command under ```bash su ```or ```bash sudo```
+The system has been tested for a debian distribution (above 2.6). It contains graphical compenents that might not work for other linux architecture.
+It's recommended to use it in a suddoer session and to create a fully root user in case of emergency (to edit files that might be a problem). After starting the system at boot time, a sudo user will not be able to use any command under ```su ```or ```sudo```.
+
+However, all that behaviors can be disable during the installation.
+
+
+# Overview <a name="overview"/>
