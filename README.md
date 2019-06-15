@@ -26,9 +26,15 @@ In addition to a layer architechtures, some changes are made into the userspace 
 # Warning <a name="warning"/>
 
 The system has been tested for a debian distribution (above 2.6). It contains graphical compenents that might not work for other linux architecture.
-It's recommended to use it in a suddoer session and to create a fully root user in case of emergency (to edit files that might be a problem). After starting the system at boot time, a sudo user will not be able to use any command under ```su ```or ```sudo```.
-
-However, all that behaviors can be disable during the installation.
-
 
 # Overview <a name="overview"/>
+
+The system acts on three process :
+
+  - During the boot, user can choose to mount *overlay* on the root filesystem. Then all files onto the main filesystem will be visible and all modifications will be saved into the RAM. A kernel module is also loaded to save the user answer
+  - At startup (when the filesystem has been remounted as read-write), content of the kernel module is read and add as an environment variable in `/etc/environment`. Then the module is unloaded
+  - At login (in graphical mode or ina login shell), a message is displayed
+  
+# Boot process <a name="boot"/>
+
+<img src="ressources/images/boot.png" width="100%"  align="middle">
