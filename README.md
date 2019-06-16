@@ -40,7 +40,7 @@ The system acts on three process :
   - At login (in graphical mode or ina login shell), a message is displayed
   
 
-An installation file is provided (must be run with su privilege). An uninstallation file will be created during the installation process and saved by default in `/usr/share/OverlayRoot` or in another directory if that one already exists.
+An installation file is provided (must be run with su privilege). An uninstallation file will be created during the installation process and saved by default in `/usr/share/overlayRoot` or in another directory if that one already exists.
 
 # Boot process <a name="boot"/>
 
