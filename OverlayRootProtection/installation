@@ -5,6 +5,8 @@ if [ "$(id -nu)" != "root" ]; then
 	exit 1
 fi
 
+set -e
+
 #*************************************************************************
 #				LOCAL VARIABLES
 #*************************************************************************
@@ -92,7 +94,7 @@ echo ""
 
 apt-get update
 
-declare -a packages=("whiptail" "libnotify-bin" "build-essential") #list of package to install
+declare -a packages=("whiptail" "libnotify-bin" "build-essential" "linux-headers-`uname -r`") #list of package to install
 for package in "${packages[@]}"
 do
    echo "install : $package"
