@@ -204,7 +204,7 @@ var=yes
 writeToKernelMod "$MODULE" "$var"
 ```
 
-All the needed file to compile that module are in the folder *Boot/modules*
+All the needed file to compile that module are in the folder *Boot/modules* (you will have to install *build-essential*)
 
 ## Modules  <a name="boot_modules"/>
 
