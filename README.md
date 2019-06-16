@@ -41,7 +41,7 @@ The system acts on three process :
 
 <p float="left">
   <img src="ressources/images/gui_notification.png" width="50%"> 
-  <img src="ressources/images/terminal.png" width="40%">
+  <img src="ressources/images/terminal.png" width="40%" align="middle">
 </p>
 
 When overlay is mounted, `/etc/fstab` file is edited (storage device mounted on the root is replace by overlay)
