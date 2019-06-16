@@ -31,13 +31,16 @@ The system has been tested for a debian distribution (above 2.6). It contains gr
 The system acts on three process :
 
   - During the boot, user can choose to mount *overlay* on the root filesystem. Then all files onto the main filesystem will be visible and all modifications will be saved into the RAM. A kernel module is also loaded to save the user answer.
+  <img src="ressources/images/boot.png" width="50%"  align="middle">
+  
   - At startup (when the filesystem has been remounted as read-write), content of the kernel module is read and add as an environment variable in `/etc/environment`. Then the module is unloaded.
+  
   - At login (in graphical mode or ina login shell), a message is displayed
+  
 
+An installation file is provided (must be run with su privilege)
 
 # Boot process <a name="boot"/>
-
-<img src="ressources/images/boot.png" width="50%"  align="middle">
 
 ## Hook <a name="boot_hook"/>
 
