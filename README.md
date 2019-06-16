@@ -191,6 +191,7 @@ writeToKernelMod "$MODULE" "$var"
 
 To use theses modules (overlay and your custom module) they have to be included inside your kernel image. To achieve that simply write the name of your modules inside the file `/etc/initramfs-tools/modules`
 
+For your custom module, add it inside a correct directory (where the system search to find the correct module when a name is inside `/etc/initramfs-tools/modules`). That directory is `/lib/modules/$(uname -r)/kernel/...`
 
 
 # Startup <a name="startup"/>
