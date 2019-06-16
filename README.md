@@ -26,6 +26,8 @@ In addition to a layer architechtures, some changes are made into the userspace 
 
 The system has been tested for a debian distribution (above 2.6). It contains graphical compenents that might not work for other linux architecture.
 
+Mounting overlay on the filesystem does not entirely protect application in userspace to write onto the storage device. The actual partition mounted on overlay cannot be remounted but other partition can be mounted. For example, the command `update initramfs -u` will edit the kernel image (so alter the boot process) even if you are running overlay because that command will save the new kernel image in the boot partition, `/dev/sda1` for example. To make sure that absolutly no write is really made you have to create a dedicated session with low rights level (for example a guest session). 
+
 # Overview <a name="overview"/>
 
 The system acts on three process :
@@ -38,7 +40,7 @@ The system acts on three process :
   - At login (in graphical mode or ina login shell), a message is displayed
   
 
-An installation file is provided (must be run with su privilege)
+An installation file is provided (must be run with su privilege). An uninstallation file will be created during the installation process and saved by default in `/usr/share/OverlayRootProtection` or in another directory if that one already exists.
 
 # Boot process <a name="boot"/>
 
