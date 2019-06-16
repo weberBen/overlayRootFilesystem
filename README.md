@@ -38,14 +38,10 @@ The system acts on three process :
   - At startup (when the filesystem has been remounted as read-write), content of the kernel module is read and add as an environment variable in `/etc/environment`. Then the module is unloaded.
   
   - At login (in graphical mode or login shell), a message is displayed
-   Gui notifications            | Shell notifications
-:-------------------------:|:-------------------------:
-!<img src="ressources/images/gui_notification.png" width="50%">  |  !<img src="ressources/images/terminal.png" width="50%" > 
-
 
 <p float="left">
   <img src="ressources/images/gui_notification.png" width="50%"> 
-  <img src="ressources/images/terminal.png" width="50%">
+  <img src="ressources/images/terminal.png" width="40%">
 </p>
 
 When overlay is mounted, `/etc/fstab` file is edited (storage device mounted on the root is replace by overlay)
