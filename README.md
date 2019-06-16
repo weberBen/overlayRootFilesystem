@@ -11,8 +11,8 @@ In addition to a layer architechtures, some changes are made into the userspace 
 # Summary
 - [Warning](#warning)
 - [Overview](#overview)
-- [Boot process](#boot)
-- [Membre du groupe de recherche](#membres)  
+- [Boot](#boot)
+- [Startup](#startup)  
 - [Attribution des taches](#taches)
 - [Modélisation d'un réseau biologique](#Modélisations)
   - [Présentation sommaire du sujet](#sujet)
@@ -162,4 +162,36 @@ mkdir $UPPER_DIR $WORK_DIR
 ```
 
 In that case, the lower directory will be on the kernel filesystem (the one mounted at boot by the kernel image) an will not be accessible later.
+
+## Save user answer
+
+If you want to save user answer (monting overlay or not) at boot time it can be tricky. [A solution](https://unix.stackexchange.com/questions/521975/save-variable-from-initramfs-at-boot-time/522027#522027) can be to remount the real filestsystem `${rootmnt}` as read-write and edit a file to save the answer. But it's a hard work to do it properly. Instead, you can load a kernel module that will be accessible in `/proc` (the `/proc` of the kernel filesystem and not the one of the real filesystem). Then simply write the answer in it and at startup (after the real filesystem has been remounted) read the content, write it inside a file and unload the kernel module.
+```
+#name of your custom kernel module
+MODULE=overlayRootOnBoot
+
+writeToKernelMod ()
+{
+	local mod=$1
+	local val=$2
+	if [ -f /proc/$mod ]; then 
+    		echo "$val" > /proc/$MODULE
+		return 0
+    	fi
+	return 1
+}
+
+...
+
+var=yes
+writeToKernelMod "$MODULE" "$var"
+```
+
+## /etc/initramfs-tools/modules
+
+To use theses modules (overlay and your custom module) they have to be included inside your kernel image. To achieve that simply write the name of your modules inside the file `/etc/initramfs-tools/modules`
+
+
+
+# Startup <a name="startup"/>
 
