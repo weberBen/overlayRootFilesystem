@@ -59,7 +59,7 @@ An installation file is provided (must be run with su privilege). An uninstallat
 
 Add the following lines into a new bash script in `/etc/initramfs-tools/modules` :
 
-```
+```sh
 #!/bin/sh
 
 . /usr/share/initramfs-tools/scripts/functions
