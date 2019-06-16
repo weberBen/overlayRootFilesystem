@@ -43,12 +43,12 @@ The system acts on three process :
 
 Add the following lines into a new bash script :
 
-`#!/bin/sh
+``#!/bin/sh
 
 . /usr/share/initramfs-tools/scripts/functions
 . /usr/share/initramfs-tools/hook-functions
 
-copy_exec /usr/bin/whiptail`
+copy_exec /usr/bin/whiptail``
 
 [Whiptail](https://en.wikibooks.org/wiki/Bash_Shell_Scripting/Whiptail) is used to display a dialog box at boot time. It's normally included into linux kernel.
 
