@@ -43,12 +43,14 @@ The system acts on three process :
 
 Add the following lines into a new bash script :
 
-``#!/bin/sh
+```
+#!/bin/sh
 
 . /usr/share/initramfs-tools/scripts/functions
 . /usr/share/initramfs-tools/hook-functions
 
-copy_exec /usr/bin/whiptail``
+copy_exec /usr/bin/whiptail
+```
 
 [Whiptail](https://en.wikibooks.org/wiki/Bash_Shell_Scripting/Whiptail) is used to display a dialog box at boot time. It's normally included into linux kernel.
 
@@ -57,7 +59,7 @@ copy_exec /usr/bin/whiptail``
 To mount overlay on root filesystem you have to edit the initramfs image after the real filesystem has been mounted as read-only by the kernel. During boot a minimal system (the kernel image) is loaded into the RAM that will do all the work needed by the real system after. In particular, the real filesystem (the one that contains all your files and system files) will be mounted on `${rootmnt}`, which is a variable defined inside the *init* of the initramfs image (in other works your storage device is mounted on that directory). At the end of the *init* script, your system will remount `${rootmnt}` as read-write and mount other virtual filesystem onto it.
 Then, you will have to mount overlay on that directory just after `${rootmnt}` become a mountpoint. I write a post that show better explaination for a complete beginner [here](https://superuser.com/questions/1421730/system-that-can-read-hard-drive-and-exclusively-write-into-ram/1421758#1421758)
 Nonetheless, a minimal structure could be :
-`
+```
 modprobe overlay
 if [ $? -ne 0 ]; then
     fail_err "missing overlay kernel module"
@@ -121,11 +123,11 @@ if [ ! $? -gt 0 ]; then
 	#add overlay on root as a device in the file
 	awk '$2 == "'${rootmnt}'" { $2 = "/" ; print $0}' /etc/mtab >> $target
 fi
-`
+```
 
 If after the boot you want to have access to the overlay structure (especially the lower layer where modifications will be made onto the storage device) then we have to create the lower directory in the same location than the upper layer (so here inside the ramdisk). Then, you need the folowwing lines :
 
-`
+```
 DIR=/overlay
 UPPER_DIR=$DIR/upper
 LOWER_DIR=$DIR/lower
@@ -143,10 +145,10 @@ if [ $? -ne 0 ]; then
     fail_err "Cannot remount ${rootmnt} and its sub mountpoints on ${rootmnt}$DIR"
     exit 1
 fi
-`
+```
 However, if you just want to mount overlay on the root filesystem, the lower directory can be on a different location :
 
-`
+```
 DIR=/overlay
 UPPER_DIR=$DIR/upper
 LOWER_DIR=$DIR/lower
@@ -157,6 +159,7 @@ mkdir $LOWER_DIR
 
 mount -t tmpfs tmpfs $DIR
 mkdir $UPPER_DIR $WORK_DIR
-`
+```
+
 In that case, the lower directory will be on the kernel filesystem (the one mounted at boot by the kernel image) an will not be accessible later.
 
