@@ -12,15 +12,14 @@ In addition to a layer architechtures, some changes are made into the userspace 
 - [Warning](#warning)
 - [Overview](#overview)
 - [Boot](#boot)
+ - [Hook](#boot_hook)
+ - [Overlay](#boot_overlay)
+ - [Save variable](#boot_var)
+ - [Modules](#boot_modules)
 - [Startup](#startup)  
 - [Login](#login)
-- [Modélisation d'un réseau biologique](#Modélisations)
-  - [Présentation sommaire du sujet](#sujet)
-  - [Une première modélisation (simplifiée)](#modélisation_simplifiee)
-  - [Modélisation du poids des connexions](#Modélisation_2)
-  - [Changement du pas de temps](#Modélisation_3)
-  - [Modélisation d'une susbtance psychoactive](#Modélisation_psycho)
-- [Modélisations mathématiques](#doc_ref) 
+ - [Gui support](#login_gui)
+ - [Terminal support](#login_terminal)
 
 
 # Warning <a name="warning"/>
@@ -40,9 +39,9 @@ The system acts on three process :
 
 <img src="ressources/images/boot.png" width="50%"  align="middle">
 
-## /etc/initramfs-tools/modules
+## Hook <a name="boot_hook"/>
 
-Add the following lines into a new bash script :
+Add the following lines into a new bash script in `/etc/initramfs-tools/modules` :
 
 ```
 #!/bin/sh
@@ -55,7 +54,7 @@ copy_exec /usr/bin/whiptail
 
 [Whiptail](https://en.wikibooks.org/wiki/Bash_Shell_Scripting/Whiptail) is used to display a dialog box at boot time. It's normally included into linux kernel.
 
-## /etc/initramfs-tools/scripts/init-bottom
+## Overlay <a name="boot_overlay"/>
 
 To mount overlay on root filesystem you have to edit the initramfs image after the real filesystem has been mounted as read-only by the kernel. During boot a minimal system (the kernel image) is loaded into the RAM that will do all the work needed by the real system after. In particular, the real filesystem (the one that contains all your files and system files) will be mounted on `${rootmnt}`, which is a variable defined inside the *init* of the initramfs image (in other works your storage device is mounted on that directory). At the end of the *init* script, your system will remount `${rootmnt}` as read-write and mount other virtual filesystem onto it.
 Then, you will have to mount overlay on that directory just after `${rootmnt}` become a mountpoint. I write a post that show better explaination for a complete beginner [here](https://superuser.com/questions/1421730/system-that-can-read-hard-drive-and-exclusively-write-into-ram/1421758#1421758)
@@ -125,6 +124,7 @@ if [ ! $? -gt 0 ]; then
 	awk '$2 == "'${rootmnt}'" { $2 = "/" ; print $0}' /etc/mtab >> $target
 fi
 ```
+The script must be copy in `/etc/initramfs-tools/scripts/init-bottom`
 
 If after the boot you want to have access to the overlay structure (especially the lower layer where modifications will be made onto the storage device) then we have to create the lower directory in the same location than the upper layer (so here inside the ramdisk). Then, you need the folowwing lines :
 
@@ -164,7 +164,7 @@ mkdir $UPPER_DIR $WORK_DIR
 
 In that case, the lower directory will be on the kernel filesystem (the one mounted at boot by the kernel image) an will not be accessible later.
 
-## Save user answer
+## Save variable  <a name="boot_var"/>
 
 If you want to save user answer (monting overlay or not) at boot time it can be tricky. [A solution](https://unix.stackexchange.com/questions/521975/save-variable-from-initramfs-at-boot-time/522027#522027) can be to remount the real filestsystem `${rootmnt}` as read-write and edit a file to save the answer. But it's a hard work to do it properly. Instead, you can load a kernel module that will be accessible in `/proc` (the `/proc` of the kernel filesystem and not the one of the real filesystem). Then simply write the answer in it and at startup (after the real filesystem has been remounted) read the content, write it inside a file and unload the kernel module.
 ```
@@ -188,7 +188,9 @@ var=yes
 writeToKernelMod "$MODULE" "$var"
 ```
 
-## /etc/initramfs-tools/modules
+All the needed file to compile that module are in the folder *Boot/modules*
+
+## Modules  <a name="boot_modules"/>
 
 To use theses modules (overlay and your custom module) they have to be included inside your kernel image. To achieve that simply write the name of your modules inside the file `/etc/initramfs-tools/modules`
 
@@ -213,7 +215,7 @@ After the startup script the only sign left by the user during boot will be save
 The behaviour of scripts at login (for example which message to display) entirely rely on the function `isSecureEnvironment` of 
 *overlayRootFunctions.sh*
 
-## Gui support
+## Gui support <a name="login_gui"/>
 
 If your system has a gui desktop (*gnome*) then to start a script after login , then we must create a desktop application that will run your script :
 ```
@@ -230,7 +232,7 @@ Then copy the file in `/etc/xdg/autostart` (at least for `gnome`)
 
 The script in the folder **Login** nammed *guiNotificationOnLogin* will be run after each login in a gui desktop
 
-## Terminal support
+## Terminal support <a name="login_terminal"/>
 
 ### Login terminal
 
