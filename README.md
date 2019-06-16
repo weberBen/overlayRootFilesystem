@@ -12,14 +12,14 @@ In addition to a layer architechtures, some changes are made into the userspace 
 - [Warning](#warning)
 - [Overview](#overview)
 - [Boot](#boot)
- - [Hook](#boot_hook)
- - [Overlay](#boot_overlay)
- - [Save variable](#boot_var)
- - [Modules](#boot_modules)
+  - [Hook](#boot_hook)
+  - [Overlay](#boot_overlay)
+  - [Save variable](#boot_var)
+  - [Modules](#boot_modules)
 - [Startup](#startup)  
 - [Login](#login)
- - [Gui support](#login_gui)
- - [Terminal support](#login_terminal)
+  - [Gui support](#login_gui)
+  - [Terminal support](#login_terminal)
 
 
 # Warning <a name="warning"/>
