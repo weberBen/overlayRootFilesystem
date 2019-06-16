@@ -102,13 +102,13 @@ mkdir $UPPER_DIR $LOWER_DIR $WORK_DIR
 # move root mountpoint to the lower layer
 mount -n -o move ${rootmnt} $LOWER_DIR
 if [ $? -ne 0 ]; then
-    fail_err "Cannot move ${rootmnt} to $LOWER_DIR"
+    echo "Cannot move ${rootmnt} to $LOWER_DIR"
     exit 1
 fi
 
 mount -t overlay -o lowerdir=$LOWER_DIR,upperdir=$UPPER_DIR,workdir=$WORK_DIR overlay ${rootmnt}
 if [ $? -ne 0 ]; then
-    fail_err "Cannot mount overlay on ${rootmnt} [lowerdir=$LOWER_DIR, upperdir=$UPPER_DIR, workdir=$WORK_DIR]"
+    echo "Cannot mount overlay on ${rootmnt} [lowerdir=$LOWER_DIR, upperdir=$UPPER_DIR, workdir=$WORK_DIR]"
     exit 1
 fi
 
@@ -118,7 +118,7 @@ fi
 #mkdir -p ${rootmnt}$DIR
 #mount -n -o rbind $DIR ${rootmnt}$DIR
 #if [ $? -ne 0 ]; then
-#    fail_err "Cannot remount ${rootmnt} and its sub mountpoints on ${rootmnt}$DIR"
+#    echo "Cannot remount ${rootmnt} and its sub mountpoints on ${rootmnt}$DIR"
 #    exit 1
 #fi
 
@@ -159,7 +159,7 @@ mkdir $UPPER_DIR $LOWER_DIR $WORK_DIR
 mkdir -p ${rootmnt}$DIR
 mount -n -o rbind $DIR ${rootmnt}$DIR
 if [ $? -ne 0 ]; then
-    fail_err "Cannot remount ${rootmnt} and its sub mountpoints on ${rootmnt}$DIR"
+    echo "Cannot remount ${rootmnt} and its sub mountpoints on ${rootmnt}$DIR"
     exit 1
 fi
 ```
