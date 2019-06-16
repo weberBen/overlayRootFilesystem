@@ -13,7 +13,7 @@ In addition to a layer architechtures, some changes are made into the userspace 
 - [Overview](#overview)
 - [Boot](#boot)
 - [Startup](#startup)  
-- [Attribution des taches](#taches)
+- [Login](#login)
 - [Modélisation d'un réseau biologique](#Modélisations)
   - [Présentation sommaire du sujet](#sujet)
   - [Une première modélisation (simplifiée)](#modélisation_simplifiee)
@@ -31,10 +31,11 @@ The system has been tested for a debian distribution (above 2.6). It contains gr
 
 The system acts on three process :
 
-  - During the boot, user can choose to mount *overlay* on the root filesystem. Then all files onto the main filesystem will be visible and all modifications will be saved into the RAM. A kernel module is also loaded to save the user answer
-  - At startup (when the filesystem has been remounted as read-write), content of the kernel module is read and add as an environment variable in `/etc/environment`. Then the module is unloaded
+  - During the boot, user can choose to mount *overlay* on the root filesystem. Then all files onto the main filesystem will be visible and all modifications will be saved into the RAM. A kernel module is also loaded to save the user answer.
+  - At startup (when the filesystem has been remounted as read-write), content of the kernel module is read and add as an environment variable in `/etc/environment`. Then the module is unloaded.
   - At login (in graphical mode or ina login shell), a message is displayed
-  
+
+
 # Boot process <a name="boot"/>
 
 <img src="ressources/images/boot.png" width="50%"  align="middle">
@@ -198,5 +199,16 @@ For your custom module, add it inside a correct directory (where the system sear
 
 To execute a file during the startup add the script inside `/etc/init.d` and then create a symbolic link inside [`/etc/rc3.d`](https://unix.stackexchange.com/questions/111611/what-does-the-rc-stand-for-in-etc-rc-d) wit the command 
 `ln -s /etc/init.d/name_script /etc/rc3.d/S01name_script` if your script is named `name_script`
+
+The folder **Startup** contains two file :
+
+- *overlayRootFunctions.sh* which contains some functions
+- *overlayRootVarSetUp* which wiil be run at every startup
+
+Other scripts will use functions of *overlayRootFunctions.sh*, then path to that file will be saved as an environment variable in 
+`/etc/environment`.
+After the startup script the only sign left by the user during boot will be saved inside `/etc/environment` as `OVERLAY_ROOT_AT_BOOT` (which can be `true` is user wanted to mount overlay during boot or `false`).
+
+# Login <a name="login"/>
 
 
