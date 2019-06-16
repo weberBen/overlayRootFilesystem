@@ -1,0 +1,283 @@
+#!/bin/bash
+
+if [ "$(id -nu)" != "root" ]; then
+	echo "Script must be executed as root"
+	exit 1
+fi
+
+#*************************************************************************
+#				LOCAL VARIABLES
+#*************************************************************************
+
+CURRENT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
+BOOT_FOLDER=/Boot
+STARTUP_FOLDER=/Startup
+LOGIN_FOLDER=/Login
+MODULES_FOLDER=/modules
+PATH_BOOT_FOLDER=$CURRENT_PATH$BOOT_FOLDER
+PATH_STARTUP_FOLDER=$CURRENT_PATH$STARTUP_FOLDER
+PATH_LOGIN_FOLDER=$CURRENT_PATH$LOGIN_FOLDER
+PATH_MODULES_FOLDER=$PATH_BOOT_FOLDER$MODULES_FOLDER
+
+PATH_ENVIRONMENR_VAR_FILE=/etc/environment
+PATH_OVERLAY_ON_USR_SYS=
+source $PATH_STARTUP_FOLDER/overlayRootFunctions.sh
+
+#for uninstall process
+U_PATH_FOLDER=$CURRENT_PATH/uninstallation
+U_FILES=$U_PATH_FOLDER/u_files
+U_MODULES=$U_PATH_FOLDER/u_modules
+U_ENV_VAR=$U_PATH_FOLDER/u_env_vars
+U_LINE_FILE=$U_PATH_FOLDER/u_line_file
+
+#*************************************************************************
+#				LOCAL FUNCTIONS
+#*************************************************************************
+rgF ()
+{
+	local FILE=$1
+	echo "$FILE" >> $U_FILES
+}
+
+
+rgM ()
+{
+	local MODULE=$1
+	echo "$MODULE" >> $U_MODULES
+}
+
+rgEV ()
+{
+	local ENV_VAR=$1
+	echo "$ENV_VAR" >> $U_ENV_VAR
+}
+
+rgLF ()
+{
+	local FILE=$1
+	local LINE=$2
+	echo "$FILE $LINE" >> $U_LINE_FILE
+}
+
+addUninstallFiles ()
+{
+	local DEST_FOLDER=$1
+	DEST_FOLDER=$DEST_FOLDER/uninstallation
+	if [ ! -d "$DEST_FOLDER" ]; then
+		mkdir $DEST_FOLDER
+	fi
+	cp -R $U_PATH_FOLDER/. $DEST_FOLDER/
+}
+
+addToFile ()
+{
+	local DEST_FILE=$1
+	local TEXT=$2
+
+	if ! lineExists $DEST_FILE "$TEXT"; then
+		echo "$TEXT" >> $DEST_FILE
+		return 0
+	fi
+	return 1
+}
+
+#*************************************************************************
+#				BOOT PROCESS
+#*************************************************************************
+
+#install package
+
+echo "** Install necessary package **"
+echo ""
+
+declare -a packages=("whiptail" "libnotify-bin") #list of package to install
+for package in "${packages[@]}"
+do
+   echo "install : $package"
+   apt-get --assume-yes install "$package"
+done
+
+
+#copy file
+DEST_FOLDER=/etc/initramfs-tools
+echo "Copy files in $DEST_FOLDER"
+
+
+cp $PATH_BOOT_FOLDER/hook $DEST_FOLDER/hooks
+rgF $DEST_FOLDER/hooks/hook
+cp $PATH_BOOT_FOLDER/overlayRoot $DEST_FOLDER/scripts/init-bottom
+rgF $DEST_FOLDER/scripts/init-bottom/overlayRoot
+
+cd $PATH_MODULES_FOLDER
+make
+
+declare -a modules=(overlay) #list of modules to add
+for mod in *.ko; do
+    filename=$(basename -- "$mod")
+    #extension="${filename##*.}"
+    filename="${filename%.*}"
+
+    modules+=("$filename") #filename without ".ko"
+    cp $PATH_MODULES_FOLDER/$mod /lib/modules/$(uname -r)/kernel/fs
+    rgF /lib/modules/$(uname -r)/kernel/fs/$mod
+done
+
+#add modules
+echo "Add module to kernel"
+
+FILE=/etc/initramfs-tools/modules
+for module in "${modules[@]}"
+do
+   echo "add : $module"
+   if ! lineExists $FILE $module ;then
+	echo "$module" >> $FILE
+   fi
+   rgM $module
+done
+
+#find module dependencies
+depmod
+
+#update initramfs image
+echo "Update initramfs image"
+
+update-initramfs -u
+
+#*************************************************************************
+#				STARTUP PROCESS
+#*************************************************************************
+
+echo ""
+echo "** EDIT STARTUP PROCESS **"
+echo ""
+
+#copy file
+DEST_FILE=/etc/init.d
+
+echo "Copy files in $DEST_FILE"
+
+cp $PATH_STARTUP_FOLDER/overlayRootFunctions.sh $DEST_FILE
+rgF $DEST_FILE/overlayRootFunctions.sh
+cp $PATH_STARTUP_FOLDER/overlayRootVarSetUp $DEST_FILE
+rgF $DEST_FILE/overlayRootVarSetUp
+
+#set environment variable
+
+TAG='OVERLAY_ROOT_SCRIPT_FUNCTIONS'
+VALUE=$DEST_FILE/overlayRootFunctions.sh
+
+addToFile $PATH_ENVIRONMENR_VAR_FILE "$TAG=$VALUE"
+rgEV $TAG
+
+#create symbolic link
+echo "Create symbolic link to run script on startup"
+
+ln -s $DEST_FILE/overlayRootVarSetUp /etc/rc3.d/S01overlayRootVarSetUp
+rgF /etc/rc3.d/S01overlayRootVarSetUp
+#file that will set environment variable to know if overlay is started on the root
+#that variable will be used by others script later
+
+#*************************************************************************
+#				LOGIN PROCESS
+#*************************************************************************
+echo ""
+echo "** EDIT LOGIN PROCESS **"
+echo ""
+
+DEST_FOLDER=/usr/share/overlayRoot
+
+#select a folder to copy file
+while [ -d "$DEST_FOLDER" ]; do
+   #Directory exist
+    echo "!! Directory <<$DEST_FOLDER>> already exist !!"
+    echo "Do you want to override it ? [y;n]"
+    read -n1 var
+
+    if [ $var == "n" ]; then #user want to select a new directory
+	echo ""
+	read -p "Enter path to new folder : " DEST_FOLDER
+    else #override the current directory
+	break
+    fi
+done
+echo ""
+PATH_OVERLAY_ON_USR_SYS=$DEST_FOLDER
+
+#set directory
+if [ ! -d "$DEST_FOLDER" ]; then
+	mkdir $DEST_FOLDER
+fi
+cp -R $PATH_LOGIN_FOLDER/. $DEST_FOLDER/
+chmod -R 775 $DEST_FOLDER #read and execute permission for all users
+
+#alter login process
+echo "Add script to run after login"
+PATH_SCRIPT=$DEST_FOLDER/shellNotificationOnLogin.sh 
+DEST_FILE=/etc/bash.bashrc
+TEXT="bash $PATH_SCRIPT"
+
+addToFile $DEST_FILE "$TEXT" #run the script when a bash console is opened (for all user)
+rgLF $DEST_FILE "$TEXT" 
+
+ln -s $PATH_SCRIPT /etc/profile.d/overlayRootShellNotificationOnLogin.sh #run the script when a login console is opened (for all user)
+rgF /etc/profile.d/overlayRootShellNotificationOnLogin.sh
+
+#*************************************************************************
+#				EDIT GUI ENVIRONMENT
+#*************************************************************************
+echo ""
+echo "** EDIT GUI STARTUP PROCESS **"
+echo ""
+echo "Add gui application to startup after user has been logged into a gui session"
+
+PATH_SCRIPT=$DEST_FOLDER/guiNotificationOnLogin 
+DESKTOP_FILE="
+[Desktop Entry]
+Name=overlat Root Norification
+GenericName=overlayNotification
+Comment=display a notification at login of an user in gui environment to inform it of the current state of overay mounted on root or not
+Exec=$PATH_SCRIPT
+Terminal=false
+Type=Application
+X-GNOME-Autostart-enabled=true"
+NAME_DESKTOP_FILE=overlayRootDesktopNotification
+NAME_DESKTOP_FILE=$NAME_DESKTOP_FILE.desktop
+
+DEST_FOLDER=/etc/xdg/autostart
+if [ -d "$DEST_FOLDER" ]; then
+#create desktop app and place it into the startup applications folder
+    echo "add $PATH_SCRIPT to gui startup applications"
+
+    cat > $DEST_FOLDER/$NAME_DESKTOP_FILE <<EOF
+[Desktop Entry]
+Name=overlat Root Norification
+GenericName=overlayNotification
+Comment=display a notification at login of an user in gui environment to inform it of the current state of overay mounted on root or not
+Exec=$PATH_SCRIPT
+Terminal=false
+Type=Application
+X-GNOME-Autostart-enabled=true
+EOF
+
+rgF $DEST_FOLDER/$NAME_DESKTOP_FILE
+
+else
+    echo "Cannot run script after user has been logged into a gui environment because $DEST_FOLDER does not exists"
+fi
+
+
+#*************************************************************************
+#				EDIT CURRENT SYSTEM
+#*************************************************************************
+echo ""
+echo "** UPDATE ENVIRONMENT VARIABLE **"
+echo ""
+
+rgEV "OVERLAY_ROOT_ON_BOOT"
+
+addUninstallFiles $PATH_OVERLAY_ON_USR_SYS
+
+
+source $PATH_STARTUP_FOLDER/overlayRootVarSetUp #setup the environment variable
+
+exit 0

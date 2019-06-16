@@ -1,0 +1,184 @@
+#!/bin/sh
+
+PREREQ=""
+prereqs()
+{
+   echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+   prereqs
+   exit 0
+   ;;
+esac
+
+#load scripts from kernel image
+. /scripts/functions
+#define name of the module used to send information about that process to userspace
+MODULE=overlayRootOnBoot
+
+writeToKernelMod ()
+{
+	local mod=$1
+	local val=$2
+	if [ -f /proc/$mod ]; then 
+    		echo "$val" > /proc/$MODULE
+		return 0
+    	fi
+	return 1
+}
+
+fail_err ()
+{
+    log_failure_msg $1
+    log_end_msg
+    echo "Error : $1"
+    writeToKernelMod "$MODULE" false
+}
+
+
+#****************************************************************************************
+#				WAIT FOR USER ANSWER ON BOOT PROCESS
+#****************************************************************************************
+
+#ask user to choose its boot process
+EXIT=
+OPTION=$(whiptail --title "Boot process on hold" --menu "Choose the boot process to use :" 10 50 3 \
+"1" "Run overlay on root filesystem" \
+"2" "Run normal boot process" \
+"3" "Abort script" 3>&1 1>&2 2>&3)
+
+#Because we use kernel module that will write into /proc to save user answer for userspace, we let the choice to abort that script (totally exit the script) or to continue as normal boot (which will save the answer into /proc)
+
+exitstatus=$?
+EXIT=false
+if [ $exitstatus != 0 ]; then #user press escape
+    EXIT=true
+fi
+if [ $OPTION = 3 ]; then #in case of emergency if the script is a problem
+    EXIT=true
+fi
+
+#exit the script without doing anything
+if [ $EXIT = true ];then 
+    echo "Script aborted !"
+    exit 0
+fi
+
+#continue with the script
+if [ $OPTION = 1 ]; then
+#mount overlay on root
+    EXIT=false
+else
+#exit the script (continue boot process as usual)
+    EXIT=true
+fi
+
+#****************************************************************************************
+#					LOAD MODULES 
+#****************************************************************************************
+
+#test if modules are loaded
+modprobe overlay
+if [ $? -ne 0 ]; then
+    fail_err "missing overlay kernel module"
+    echo "Script aborted !"
+    exit 1
+fi
+
+modprobe $MODULE
+if [ $? -ne 0 ]; then
+    fail_err "missing $MODULE kernel module"
+    echo "Script aborted !"
+    exit 1
+fi
+
+
+#****************************************************************************************
+#					SAVE USER ANSWER 
+#****************************************************************************************
+
+
+var=
+if [ $EXIT = true ];then 
+    var=false
+else
+    var=true
+fi
+
+#save user answer for later in userspace
+writeToKernelMod "$MODULE" "$var"
+
+if [ $EXIT = true ];then 
+#exit the script
+    exit 0
+fi
+
+#****************************************************************************************
+#				  MONTING OVERLAY 
+#****************************************************************************************
+
+echo "Mounting overlay on root filesystem..."
+
+DIR=/overlay
+UPPER_DIR=$DIR/upper
+LOWER_DIR=$DIR/lower
+WORK_DIR=$DIR/work
+
+mkdir $DIR
+#create temporary filesystem in RAM
+mount -t tmpfs tmpfs $DIR
+if [ $? -ne 0 ]; then
+    fail_err "Fail to mount tmpfs on $DIR"
+    exit 1
+fi
+
+#create lower, upper and workdir for overaly
+mkdir $UPPER_DIR $LOWER_DIR $WORK_DIR
+
+# move root mountpoint to the lower layer
+mount -n -o move ${rootmnt} $LOWER_DIR
+if [ $? -ne 0 ]; then
+    fail_err "Cannot move ${rootmnt} to $LOWER_DIR"
+    exit 1
+fi
+
+#mount overlay onto the root
+mount -t overlay -o lowerdir=$LOWER_DIR,upperdir=$UPPER_DIR,workdir=$WORK_DIR overlay ${rootmnt}
+if [ $? -ne 0 ]; then
+    fail_err "Cannot mount overlay on ${rootmnt} [lowerdir=$LOWER_DIR, upperdir=$UPPER_DIR, workdir=$WORK_DIR]"
+    exit 1
+fi
+
+#mount virtual filesystem over the lower dir (as it's donne for the root with /proc and /sysfs which are mounted onto the root at the end of the init)
+
+#uncomment that section if you want to access the layers of overlay whithin userspace
+#mkdir -p ${rootmnt}$DIR
+#mount -n -o rbind $DIR ${rootmnt}$DIR
+#if [ $? -ne 0 ]; then
+#    fail_err "Cannot remount ${rootmnt} and its sub mountpoints on ${rootmnt}$DIR"
+#    exit 1
+#fi
+
+# edit fstab to match the actual modifications
+
+
+
+#get the device that is mounted on the rootfilesystem
+root_device="$(awk '$2 == "/" {print $0}' ${rootmnt}/etc/fstab)"
+#check if that device exists
+blkid $root_device
+if [ ! $? -gt 0 ]; then
+	target=${rootmnt}/etc/fstab
+	target_c=$target.orig
+	#create a copy of the file (that will be accessible later)
+	cp $target $target_c
+	#remove the root device from the file
+	grep -v "$root_device" $target_c > $target
+
+	#add overlay on root as a device in the file
+	awk '$2 == "'${rootmnt}'" { $2 = "/" ; print $0}' /etc/mtab >> $target
+fi
+
+exit 0

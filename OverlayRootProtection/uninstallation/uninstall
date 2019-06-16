@@ -1,0 +1,100 @@
+#!/bin/bash
+
+rmExactLine ()
+{
+	local FILE=$1
+	local STRING=$2
+	(grep -Fxv "$STRING" < $FILE) > temp && mv temp $FILE
+
+}
+
+splitString ()
+{
+	local TEXT=$1
+	local s1=""
+	local s2=""
+	local _find=false
+
+	read -ra ADDR <<< "$TEXT"
+	for i in "${ADDR[@]}"; do
+	    if [ $_find == false ]; then
+		s1="$s1$i"
+		_find=true
+	    else
+		s2="$s2$i "
+	    fi
+	done
+	
+	length_=${#s2}
+	if [ $length_ != 0 ]; then
+		s2=${s2::-1} #remove last char ' '
+	fi
+
+	#return results
+	eval "$2='$s1'"
+	eval "$3='$s2'"
+
+}
+
+CURRENT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
+OVERLAY_DIR="$(dirname "$CURRENT_PATH")" #parent direction
+
+UNINSTALL_DIR=$OVERLAY_DIR/uninstallation
+#remove file
+
+input="$UNINSTALL_DIR/u_files"
+
+while IFS= read -r line
+do
+  rm -R "$line"
+done < "$input"
+
+#remove modules
+
+input="$UNINSTALL_DIR/u_modules"
+declare -a array=()
+
+while IFS= read -r line
+do
+    array+=("$line")
+done < "$input"
+
+for obj in "${array[@]}"
+do
+    echo "Remove module <<$obj>> from kernel image ? [y;n]"
+    read -n1 var
+
+    if [ "$var" != "n" ]; then #user want to select a new directory
+	rmExactLine /etc/initramfs-tools/modules $obj
+    fi
+   
+done
+
+#remove line from file
+input="$UNINSTALL_DIR/u_line_file"
+
+while IFS= read -r line
+do
+  _file=""
+  _line_to_rm=""
+  splitString "$line" _file _line_to_rm
+  rmExactLine $_file "$_line_to_rm"
+
+done < "$input"
+
+
+#remove environment variable
+input="$UNINSTALL_DIR/u_env_vars"
+array=()
+
+while IFS= read -r line
+do
+  (grep -v "^$line=" /etc/environment) > temp && mv temp /etc/environment
+done < "$input"
+
+
+#update kernal image
+update-initramfs -u
+
+#remove oervaly folder
+rm -R $OVERLAY_DIR

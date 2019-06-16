@@ -1,0 +1,20 @@
+#!/bin/bash
+
+source /etc/environment
+source $OVERLAY_ROOT_SCRIPT_FUNCTIONS
+
+CURRENT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
+IMAGES_PATH=$CURRENT_PATH/images
+TIME_MS=5000
+let TIME_S=TIME_MS/1000
+
+if ! isSecureEnvironment ; then
+   #user is in root group
+   notify-send 'Warning' 'System not secured' --urgency=critical --icon=$IMAGES_PATH/warning.png -t $TIME_MS
+else
+   #user is not in root group
+      notify-send 'Protected' 'System secured' --urgency=critical --icon=$IMAGES_PATH/lock.png -t $TIME_MS
+
+fi
+
+#no exit at the end

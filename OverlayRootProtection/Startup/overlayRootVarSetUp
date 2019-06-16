@@ -1,0 +1,53 @@
+#!/bin/bash
+
+moduleLoaded ()
+{
+	if lsmod | grep "$1" &> /dev/null ; then
+	  #module is loaded
+	  return 0 #true
+	else
+	  return 1
+	fi
+}
+
+
+source /etc/environment
+source $OVERLAY_ROOT_SCRIPT_FUNCTIONS
+
+var=
+mounted=false
+TAG="OVERLAY_ROOT_AT_BOOT"
+
+MODULE=overlayRootOnBoot
+
+if moduleLoaded $MODULE ; then
+  #module is loaded
+  if [ -f /proc/$MODULE ]; then
+     var="$(cat /proc/$MODULE)"
+     if [ "$var" != false ]; then
+        if [ "$var" != true ]; then
+            var=false
+        fi
+     fi
+  else
+     var=false
+  fi
+else
+  var=false
+fi
+
+if [ $var == true ]; then
+	if ! grep -qs 'overlay /' /proc/mounts; then
+	    #not mounted
+	    var=false
+	fi
+fi
+
+replaceOrAppendToFile /etc/environment "$TAG=" "${TAG}=${var}"
+
+
+if moduleLoaded $MODULE ; then
+       rmmod $MODULE
+fi
+
+exit 0
