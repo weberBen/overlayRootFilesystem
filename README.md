@@ -210,5 +210,35 @@ Other scripts will use functions of *overlayRootFunctions.sh*, then path to that
 After the startup script the only sign left by the user during boot will be saved inside `/etc/environment` as `OVERLAY_ROOT_AT_BOOT` (which can be `true` is user wanted to mount overlay during boot or `false`).
 
 # Login <a name="login"/>
+The behaviour of scripts at login (for example which message to display) entirely rely on the function `isSecureEnvironment` of 
+*overlayRootFunctions.sh*
+
+## Gui support
+
+If your system has a gui desktop (*gnome*) then to start a script after login , then we must create a desktop application that will run your script :
+```
+[Desktop Entry]
+Name=name of my application...
+GenericName=generci name...
+Comment=comment...
+Exec=path_to_your_script
+Terminal=false
+Type=Application
+X-GNOME-Autostart-enabled=true
+```
+Then copy the file in `/etc/xdg/autostart` (at least for `gnome`)
+
+The script in the folder **Login** nammed *guiNotificationOnLogin* will be run after each login in a gui desktop
+
+## Terminal support
+
+### Login terminal
+
+To execute a script when a login terminal is opended add your script in `/etc/profile.d`. That script is *shellNotificationOnLogin.sh*.
+
+### Bash terminal
+
+To execute a script when a bash terminal is opended add  path of your script inside the file `/etc/bash.bashrc`
+
 
 
