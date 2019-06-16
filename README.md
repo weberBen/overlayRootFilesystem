@@ -196,3 +196,7 @@ For your custom module, add it inside a correct directory (where the system sear
 
 # Startup <a name="startup"/>
 
+To execute a file during the startup add the script inside `/etc/init.d` and then create a symbolic link inside [`/etc/rc3.d`](https://unix.stackexchange.com/questions/111611/what-does-the-rc-stand-for-in-etc-rc-d) wit the command 
+`ln -s /etc/init.d/name_script /etc/rc3.d/S01name_script` if your script is named `name_script`
+
+
