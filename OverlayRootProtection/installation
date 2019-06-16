@@ -90,6 +90,8 @@ addToFile ()
 echo "** Install necessary package **"
 echo ""
 
+apt-get update
+
 declare -a packages=("whiptail" "libnotify-bin" "build-essential") #list of package to install
 for package in "${packages[@]}"
 do
