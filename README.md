@@ -41,12 +41,15 @@ The system acts on three process :
 
 <p float="left">
   <img src="ressources/images/gui_notification.png" width="50%"> 
-  <img src="ressources/images/terminal.png" width="40%" align="middle">
+  <img src="ressources/images/terminal.png" width="40%">
 </p>
+
 
 When overlay is mounted, `/etc/fstab` file is edited (storage device mounted on the root is replace by overlay)
 
  <img src="ressources/images/fstab.png" width="50%"  align="middle"> 
+
+
 
 An installation file is provided (must be run with su privilege). An uninstallation file will be created during the installation process and saved by default in `/usr/share/overlayRoot` or in another directory if that one already exists.
 
