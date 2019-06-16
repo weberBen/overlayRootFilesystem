@@ -1,8 +1,8 @@
 # Protecting linux based system with overlay
 
-Some projects requires to disable writes to the storage device for embedded puposes where untimely shutdown happend or for safety purposes when an external cryptographic system is used to secure data, then it's fondamental to make sure that no userspace applications write data onto a storage device as background task.
+Some projects require to disable writes to the storage device for embedded purposes where untimely shutdown happens or for safety purposes when an external cryptographic system is used to secure data, then it's fondamental to make sure that no userspace applications write data onto a storage device as background task.
 
-The project enable user to protect it system from writing to the main storage device of computer without interfering with userspace applications. During boot process the root filesystem is mounted in a layers architecture with the root at bottom and the computer RAM at the top, using [overlayFs](https://en.wikipedia.org/wiki/OverlayFS).
+The project enables user to protect it system from writing to the main storage device of computer without interfering with userspace applications. During boot process the root filesystem is mounted in a layers architecture with the root at the bottom and the computer RAM at the top, using [overlayFs](https://en.wikipedia.org/wiki/OverlayFS).
 In other words, all files in the storage device (commonly the hard drive) will be visible behind all modifications which will be saved into the RAM. As a result, no physical writes will be registered onto the system storage device.
 
 # Summary
