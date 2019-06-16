@@ -144,7 +144,7 @@ The script must be copy in `/etc/initramfs-tools/scripts/init-bottom`
 
 If after the boot you want to have access to the overlay structure (especially the lower layer where modifications will be made onto the storage device) then we have to create the lower directory in the same location than the upper layer (so here inside the ramdisk). Then, you need the folowwing lines :
 
-```
+```sh
 DIR=/overlay
 UPPER_DIR=$DIR/upper
 LOWER_DIR=$DIR/lower
@@ -165,7 +165,7 @@ fi
 ```
 However, if you just want to mount overlay on the root filesystem, the lower directory can be on a different location :
 
-```
+```sh
 DIR=/overlay
 UPPER_DIR=$DIR/upper
 LOWER_DIR=$DIR/lower
@@ -183,7 +183,7 @@ In that case, the lower directory will be on the kernel filesystem (the one moun
 ## Save variable  <a name="boot_var"/>
 
 If you want to save user answer (monting overlay or not) at boot time it can be tricky. [A solution](https://unix.stackexchange.com/questions/521975/save-variable-from-initramfs-at-boot-time/522027#522027) can be to remount the real filestsystem `${rootmnt}` as read-write and edit a file to save the answer. But it's a hard work to do it properly. Instead, you can load a kernel module that will be accessible in `/proc` (the `/proc` of the kernel filesystem and not the one of the real filesystem). Then simply write the answer in it and at startup (after the real filesystem has been remounted) read the content, write it inside a file and unload the kernel module.
-```
+```sh
 #name of your custom kernel module
 MODULE=overlayRootOnBoot
 
