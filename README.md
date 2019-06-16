@@ -75,7 +75,7 @@ copy_exec /usr/bin/whiptail
 To mount overlay on root filesystem you have to edit the initramfs image after the real filesystem has been mounted as read-only by the kernel. During boot a minimal system (the kernel image) is loaded into the RAM that will do all the work needed by the real system after. In particular, the real filesystem (the one that contains all your files and system files) will be mounted on `${rootmnt}`, which is a variable defined inside the *init* of the initramfs image (in other works your storage device is mounted on that directory). At the end of the *init* script, your system will remount `${rootmnt}` as read-write and mount other virtual filesystem onto it.
 Then, you will have to mount overlay on that directory just after `${rootmnt}` become a mountpoint. I write a post that show better explaination for a complete beginner [here](https://superuser.com/questions/1421730/system-that-can-read-hard-drive-and-exclusively-write-into-ram/1421758#1421758)
 Nonetheless, a minimal structure could be :
-```
+```sh
 modprobe overlay
 if [ $? -ne 0 ]; then
     fail_err "missing overlay kernel module"
