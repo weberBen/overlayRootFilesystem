@@ -1,9 +1,9 @@
-# Protecting linux based system with overlay
+# Protecting Linux based system with overlay
 
-Some projects require to disable writes to the storage device for embedded purposes where untimely shutdown happens or for safety purposes when an external cryptographic system is used to secure data, then it's fondamental to make sure that no userspace applications write data onto a storage device as background task.
+Some projects require to disable writes to the storage device for embedded purposes where untimely shutdown happens or for safety purposes when an external cryptographic system is used to secure data, then it's fundamental to make sure that no userspace applications write data onto a storage device as a background task.
 
-The project enables user to protect it system from writing to the main storage device of computer without interfering with userspace applications. During boot process the root filesystem is mounted in a layers architecture with the root at the bottom and the computer RAM at the top, using [overlayFs](https://en.wikipedia.org/wiki/OverlayFS).
-In other words, all files in the storage device (commonly the hard drive) will be visible behind all modifications which will be saved into the RAM. As a result, no physical writes will be registered onto the system storage device.
+The project enables users to protect their systems from writing to the main storage device of computer without interfering with userspace applications. During the boot process the root filesystem is mounted in a layered architecture with the root at the bottom and the computer RAM at the top, using [overlayFs](https://en.wikipedia.org/wiki/OverlayFS).
+In other words, all files on the storage device (commonly the hard drive) will be visible behind all modifications which will be saved into the RAM. As a result, no physical writes will be registered onto the system storage device.
 
 # Summary
 - [Warning](#warning)
@@ -21,13 +21,13 @@ In other words, all files in the storage device (commonly the hard drive) will b
 
 # Warning <a name="warning"/>
 
-The system has been tested for a debian distribution (above 2.6). It contains graphical compenents that might not work for other linux architecture (for the userspace part of the project).
+The system has been tested for a debian distribution (above 2.6). It contains graphical components that might not work for other Linux architecture (for the userspace part of the project).
 
-Mounting overlay on the filesystem does not entirely protect storage device from applications in userspace. The actual partition mounted on overlay cannot be remounted but other partitions can be. For example, the command `update initramfs -u` will edit the kernel image (so alter the boot process) even if you are running overlay because that command will save the new kernel image in the boot partition, `/dev/sda1` for example. To make sure that absolutly no writes is really made you have to create a dedicated session with low rights level (for example a guest session). 
+Mounting overlay on the filesystem does not entirely protect storage device from applications in userspace. The actual partition mounted on overlay cannot be remounted but other partitions can be. For example, the command `update initramfs -u` will edit the kernel image (so alter the boot process) even if you are running overlay because that command will save the new kernel image in the boot partition, `/dev/sda1` for example. To make sure that absolutely no writes is really made you have to create a dedicated session with low rights level (for example a guest session). 
 
 # Overview <a name="overview"/>
 
-The system acts on three process :
+The system acts on three processes :
 
   - During the boot, user can choose to mount *overlay* on the root filesystem. Then all files onto the main filesystem will be visible and all modifications will be saved into the RAM. A kernel module is also loaded to save the user answer.
   <img src="ressources/images/boot.png" width="50%"  align="middle">
@@ -70,7 +70,7 @@ copy_exec /usr/bin/whiptail
 ## Overlay <a name="boot_overlay"/>
 
 To mount overlay on root filesystem you have to edit the initramfs image after the real filesystem has been mounted as read-only by the kernel. In details, during boot a minimal system (the kernel image) is loaded into the RAM that will do all the work needed by the real system after. In particular, the real filesystem (the one that contains all your files and system files) will be mounted on `${rootmnt}`, which is a variable defined inside the *init* of the initramfs image (in other words your storage device is mounted on that directory). At the end of the *init* script, your system will remount `${rootmnt}` as read-write and mount other virtual filesystem onto it.
-Then, you will have to mount overlay on that directory just after `${rootmnt}` become a mountpoint. I write a post with better explainations for a complete beginner [here](https://superuser.com/questions/1421730/system-that-can-read-hard-drive-and-exclusively-write-into-ram/1421758#1421758)
+Then, you will have to mount overlay on that directory just after `${rootmnt}` become a mountpoint. I write a post with better explanations for a complete beginner [here](https://superuser.com/questions/1421730/system-that-can-read-hard-drive-and-exclusively-write-into-ram/1421758#1421758)
 Nonetheless, a minimal structure could be :
 ```sh
 modprobe overlay
@@ -139,7 +139,7 @@ fi
 ```
 The script must be copied in `/etc/initramfs-tools/scripts/init-bottom`
 
-After the boot, if you want to have access to the overlay structure (especially the lower layer where modifications will be made onto the storage device) then you have to create the lower directory in the same location than the upper layer (so here inside the ramdisk). Then, you need the folowwing lines :
+After the boot, if you want to have access to the overlay structure (especially the lower layer where modifications will be made onto the storage device) then you have to create the lower directory in the same location than the upper layer (so here inside the ramdisk). Then, you need the following lines :
 
 ```sh
 DIR=/overlay
@@ -179,7 +179,7 @@ In that case, the lower directory will be on the kernel filesystem (the one moun
 
 ## Save variable  <a name="boot_var"/>
 
-If you want to save user answer (monting overlay or not) at boot time it can be tricky. [A solution](https://unix.stackexchange.com/questions/521975/save-variable-from-initramfs-at-boot-time/522027#522027) can be to remount the real filestsystem `${rootmnt}` as read-write and edit a file to save the answer. But it's a hard work to do it properly. Instead, you can load a kernel module that will be accessible in `/proc` (the `/proc` of the kernel filesystem and not the one of the real filesystem). Then simply write the answer in it and at startup (after the real filesystem has been remounted) read the content, write it inside a file and unload the kernel module.
+If you want to save user answer (mounting overlay or not) at boot time it can be tricky. [A solution](https://unix.stackexchange.com/questions/521975/save-variable-from-initramfs-at-boot-time/522027#522027) can be to remount the real filestsystem `${rootmnt}` as read-write and edit a file to save the answer. But it's a hard work to do it properly. Instead, you can load a kernel module that will be accessible in `/proc` (the `/proc` of the kernel filesystem and not the one of the real filesystem). Then simply write the answer in it and at startup (after the real filesystem has been remounted) read the content, write it inside a file and unload the kernel module.
 ```sh
 #name of your custom kernel module
 MODULE=overlayRootOnBoot
